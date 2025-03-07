@@ -1,6 +1,6 @@
 -- Configurações globais
 local _G = getgenv()
-_G.RaioCirculo = 70
+_G.RaioCirculo = 100
 _G.DistanciaMaxima = 200
 _G.CorHighlight = Color3.new(0.6, 0, 1)  -- Roxo
 
