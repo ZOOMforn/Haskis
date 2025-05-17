@@ -1,0 +1,58 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RS = game:GetService("RunService")
+
+local Jogador = Players.LocalPlayer
+local Config = {
+    VelBase = 65,
+    Turbo = 3.5,
+    Vertical = 40
+}
+
+local Estado = {
+    Ativo = false,
+    RotInicial = nil,
+    VelAtual = Vector3.new()
+}
+
+local function ControleVoo(Char)
+    local Hum = Char:WaitForChild("Humanoid")
+    local Raiz = Char:WaitForChild("HumanoidRootPart")
+
+    UIS.InputBegan:Connect(function(Input)
+        if Input.KeyCode == Enum.KeyCode.Q then -- Tecla F para ativar
+            Estado.Ativo = not Estado.Ativo
+            Hum.PlatformStand = Estado.Ativo
+            if Estado.Ativo then
+                Estado.RotInicial = Raiz.CFrame - Raiz.Position
+            end
+        end
+    end)
+
+    RS.Heartbeat:Connect(function(D)
+        if Estado.Ativo and Raiz and Hum.Health > 0 then
+            -- Mantém orientação original
+            Raiz.CFrame = CFrame.new(Raiz.Position) * Estado.RotInicial
+            
+            -- Captura movimentos
+            local Dir = Vector3.new(
+                UIS:IsKeyDown(Enum.KeyCode.D) and 1 or UIS:IsKeyDown(Enum.KeyCode.A) and -1 or 0,
+                UIS:IsKeyDown(Enum.KeyCode.F) and 0.8 or UIS:IsKeyDown(Enum.KeyCode.Q) and -0.8 or 0,
+                UIS:IsKeyDown(Enum.KeyCode.W) and -1 or UIS:IsKeyDown(Enum.KeyCode.S) and 1 or 0
+            )
+            
+            -- Cálculo da velocidade
+            local Cam = workspace.CurrentCamera
+            local Multi = UIS:IsKeyDown(Enum.KeyCode.LeftShift) and Config.Turbo or 1
+            local Mov = Cam.CFrame:VectorToWorldSpace(Dir) * Config.VelBase * Multi
+            
+            Estado.VelAtual = Estado.VelAtual:Lerp(Mov + Vector3.new(0, Dir.Y * Config.Vertical, 0), D * 6)
+            Raiz.Velocity = Estado.VelAtual
+        end
+    end)
+end
+
+Jogador.CharacterAdded:Connect(ControleVoo)
+if Jogador.Character then ControleVoo(Jogador.Character) end
+    end
+})
